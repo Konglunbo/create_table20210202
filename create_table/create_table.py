@@ -25,10 +25,11 @@ for i in table_nm:
         w = []
         for lines in f.readlines():
             lines = lines.lower()
-            content = re.sub(r'bigint.*?(?=comment)|tinyint.*?(?=comment)|int.*?(?=comment)', "  bigint  ", lines)
-            content = re.sub(r'varchar.*?(?=comment)|datetime.*?(?=comment)|char.*?(?=comment)|timestamp.*?(?=comment)', "  string ", content)
+            # print(lines)
+            content = re.sub(r'bigint.*?null|tinyint.*?null|int.*?null', "  bigint  ", lines)
+            content = re.sub(r'varchar.*?null|datetime.*?null|char.*?null|timestamp.*?null', "  string ", content)
             decimal = re.findall(r'[(](.*?)[)]', content)
-            if len(decimal)>0:content = re.sub(r'decimal.*?(?=comment)', "decimal("+decimal[0]+")   ", content)
+            if len(decimal)>0:content = re.sub(r'decimal.*?null', "decimal("+decimal[0]+")   ", content)
             content = re.sub(r'`rs', "`ods.ods_rs", content)
             content = re.sub(r'` \(', " ` (", content)
             content = re.sub(r'primary.*$|unique.*$|key.*$|create table.*$|engine=innodb.*$', "", content)
@@ -38,28 +39,85 @@ for i in table_nm:
             # w.append(content)
         w1 = []
 
+        print "---------建表语句-----------"
         for i in w:
             if len(i) > 1:
-                col_nm=i.split()[0]
-                col_type = i.split()[1]
-                col_com = i.split()[2]
-                col_comm = i.split()[3]
-                str=col_nm.ljust(25)+col_type.ljust(20)+col_com.ljust(20)+col_comm.ljust(25)
+                splitStr=[]
+                splitStr=i.split()
+                if len(splitStr)>=4:
+                    col_nm=splitStr[0]
+                    col_type = splitStr[1]
+                    col_com = splitStr[2]
+                    col_comm = splitStr[3]
+                    col_comm = col_comm.replace(',', '')
+                    col_comm = col_comm.replace('\'', '')
+
+                    str=','+col_nm.ljust(35)+col_type.ljust(20)+col_com.ljust(8)+'\''+col_comm+'\''
+                elif len(splitStr)==3:
+                    col_nm = splitStr[0]
+                    col_type = splitStr[1]
+                    str =','+ col_nm.ljust(35) + col_type.ljust(20)
+                else:
+                    col_nm=splitStr[0]
+                    str=col_nm.ljust(25)
                 print(str)
-                # w1.append(i)
+
+
+        print "---------Coalesce转换-----------"
+        for i in w:
+            if len(i) > 1:
+                splitStr = []
+                splitStr = i.split()
+                if len(splitStr) >= 4:
+                    col_nm = splitStr[0]
+                    col_type = splitStr[1]
+                    col_com = splitStr[2]
+                    col_comm = splitStr[3]
+                    col_comm = col_comm.replace(',', '')
+                    col_comm = col_comm.replace('\'', '')
+                    if col_type.startswith('decimal'):
+                        str = ',COALESCE(T1.' + col_nm+', CAST(0 AS ' + col_type +')) -- ' + '\''+col_comm+'\''
+                    else:
+                        str =',T1.'+col_nm.ljust(25)+' -- '+ '\''+col_comm+'\''
+
+                elif len(splitStr) == 3:
+                    col_nm = splitStr[0]
+                    col_type = splitStr[1]
+                    if col_type.startswith('decimal'):
+                        str = ',COALESCE(T1.' + col_nm + ', CAST(0 AS ' + col_type + ')) -- ' + '\''+col_comm+'\''
+                    else:
+                        str = ',T1.' + col_nm.ljust(25)
+                else:
+                    col_nm = splitStr[0]
+                    str = col_nm.ljust(25)
+                print(str)
+
         print "\n"
-        # table_cols = []
-        # for i in w1[1:-1]:
-        #     table_cols.append(i.split()[0])
-        # c = ','.join(table_cols) + ':' + table_cols[0]
-        # col_nm[w1[0].strip('create table ods.ods')] = c
-        # ods_table = w1[0].strip("create").strip("table").strip('  (;')
-        # w95 = '\n'.join(w1) + ")"+'\n'+"partitioned by (dt string) row format delimited fields terminated by '\\t' lines terminated by '\\n';"
-        # ods_95 = w95.replace(',)', ')')
-        # print(ods_95 + '\n')
+        print "---------码值转换----------"
+        for i in w:
+            if len(i) > 1:
+                splitStr = []
+                splitStr = i.split()
+                if len(splitStr) >= 4:
+                    col_nm = splitStr[0]
+                    col_type = splitStr[1]
+                    col_com = splitStr[2]
+                    col_comm = splitStr[3]
+                    col_comm = col_comm.replace(',', '')
+                    col_comm = col_comm.replace('\'', '')
+                    str = ',T1.' + col_nm.ljust(25) + ' -- ' + '\''+col_comm+'\''
+
+                elif len(splitStr) == 3:
+                    col_nm = splitStr[0]
+                    col_type = splitStr[1]
+                    str = ',T1.' + col_nm.ljust(25)
+                else:
+                    col_nm = splitStr[0]
+                    str = col_nm.ljust(25)
+                print(str)
 
 
- # print "\n"
-# print col_nm
-# col = pd.Series(col_nm)
-# print col
+
+
+
+
