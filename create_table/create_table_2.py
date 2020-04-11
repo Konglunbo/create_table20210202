@@ -13,7 +13,8 @@ engine = MySQLdb.connect(host='60.60.40.62', port=3306, user='liuyang', passwd='
                          connect_timeout=200, charset='utf8')
 
 col_nm = defaultdict(list)
-table_nm = ['cust_acct_prod_info','cust_info']
+# 'cust_acct_prod_info','cust_info',
+table_nm = ['cust_acct_prod_info']
 for i in table_nm:
     sql = "show create table " + i
     df = pd.read_sql(sql, engine)
@@ -28,6 +29,7 @@ for i in table_nm:
             # print(lines)
             content = re.sub(r'bigint.*?null|tinyint.*?null|int.*?null', "  bigint  ", lines)
             content = re.sub(r'varchar.*?null|datetime.*?null|char.*?null|timestamp.*?null', "  string ", content)
+            content = re.sub(r'longtext.*?(?=comment)',"  string ", content)
             decimal = re.findall(r'[(](.*?)[)]', content)
             if len(decimal)>0:content = re.sub(r'decimal.*?null', "decimal("+decimal[0]+")   ", content)
             content = re.sub(r'`rs', "`ods.ods_rs", content)
@@ -38,7 +40,7 @@ for i in table_nm:
             w.append(content.strip())
             # w.append(content)
         w1 = []
-
+        print "\n"
         print "---------建表语句-----------"
         for i in w:
             if len(i) > 1:
@@ -47,22 +49,22 @@ for i in table_nm:
                 if len(splitStr)>=4:
                     col_nm=splitStr[0]
                     col_type = splitStr[1]
-                    col_com = splitStr[2]
-                    col_comm = splitStr[3]
+                    col_com = splitStr[-2]
+                    col_comm = splitStr[-1]
                     col_comm = col_comm.replace(',', '')
                     col_comm = col_comm.replace('\'', '')
 
-                    str=','+col_nm.ljust(35)+col_type.ljust(20)+col_com.ljust(8)+'\''+col_comm+'\''
+                    str=','+col_nm.ljust(35)+col_type.ljust(20)+'comment  \''+col_comm+'\''
                 elif len(splitStr)==3:
                     col_nm = splitStr[0]
                     col_type = splitStr[1]
-                    str =','+ col_nm.ljust(35) + col_type.ljust(20)
+                    str =','+ col_nm.ljust(35) + col_type.ljust(20) + 'comment '
                 else:
                     col_nm=splitStr[0]
                     str=col_nm.ljust(25)
                 print(str)
 
-
+        print "\n"
         print "---------Coalesce转换-----------"
         for i in w:
             if len(i) > 1:
@@ -71,14 +73,14 @@ for i in table_nm:
                 if len(splitStr) >= 4:
                     col_nm = splitStr[0]
                     col_type = splitStr[1]
-                    col_com = splitStr[2]
-                    col_comm = splitStr[3]
+                    col_com = splitStr[-2]
+                    col_comm = splitStr[-1]
                     col_comm = col_comm.replace(',', '')
                     col_comm = col_comm.replace('\'', '')
                     if col_type.startswith('decimal'):
-                        str = ',COALESCE(T1.' + col_nm+', CAST(0 AS ' + col_type +')) -- ' + '\''+col_comm+'\''
+                        str = ',COALESCE(T1.' + col_nm+', CAST(0 AS ' + col_type +')) '.ljust(7) + '--  \''+col_comm+'\''
                     else:
-                        str =',T1.'+col_nm.ljust(25)+' -- '+ '\''+col_comm+'\''
+                        str =',T1.'+col_nm.ljust(25).ljust(50)+ '--  \''+col_comm+'\''
 
                 elif len(splitStr) == 3:
                     col_nm = splitStr[0]
@@ -101,8 +103,8 @@ for i in table_nm:
                 if len(splitStr) >= 4:
                     col_nm = splitStr[0]
                     col_type = splitStr[1]
-                    col_com = splitStr[2]
-                    col_comm = splitStr[3]
+                    col_com = splitStr[-2]
+                    col_comm = splitStr[-1]
                     col_comm = col_comm.replace(',', '')
                     col_comm = col_comm.replace('\'', '')
                     str = ',T1.' + col_nm.ljust(25) + ' -- ' + '\''+col_comm+'\''
@@ -115,9 +117,3 @@ for i in table_nm:
                     col_nm = splitStr[0]
                     str = col_nm.ljust(25)
                 print(str)
-
-
-
-
-
-
