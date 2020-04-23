@@ -9,12 +9,12 @@ from collections import defaultdict
 import MySQLdb
 import pandas as pd
 
-engine = MySQLdb.connect(host='60.60.40.62', port=3306, user='liuyang', passwd='liuyang@2019', db='cmis_core',
+engine = MySQLdb.connect(host='60.60.40.62', port=3306, user='liuyang', passwd='liuyang@2019', db='cmis_hs',
                          connect_timeout=200, charset='utf8')
 
 col_nm = defaultdict(list)
 # 'cust_acct_prod_info','cust_info',
-table_nm = ['cust_acct_prod_info']
+table_nm = ['lm_retrn_log']
 for i in table_nm:
     sql = "show create table " + i
     df = pd.read_sql(sql, engine)
