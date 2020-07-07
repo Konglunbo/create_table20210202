@@ -14,7 +14,7 @@ engine = MySQLdb.connect(host='60.60.40.62', port=3306, user='liuyang', passwd='
 
 col_nm = defaultdict(list)
 # 'cust_acct_prod_info','cust_info',
-table_nm = ['lc_appl_limit']
+table_nm = ['lc_appl_limit_use']
 for i in table_nm:
     sql = "show create table " + i
     df = pd.read_sql(sql, engine)
@@ -42,7 +42,7 @@ for i in table_nm:
                     col_nm=splitStr[0]
                     col_type = splitStr[1]
                     col_type = re.sub(r'bigint.*|tinyint.*|int.*', "bigint  ", col_type)
-                    col_type = re.sub(r'varchar.*|datetime.*|char.*|timestamp.*|longtext.*', "string ",col_type)
+                    col_type = re.sub(r'varchar.*|datetime.*|char.*|timestamp.*|longtext.*|date.*|text.*', "string ",col_type)
                     col_comm = splitStr[-1]
                     col_comm = col_comm.replace(',', '')
                     col_comm = col_comm.replace('\'', '')
@@ -51,8 +51,8 @@ for i in table_nm:
                     col_nm = splitStr[0]
                     col_type = splitStr[1]
                     col_type = re.sub(r'bigint.*|tinyint.*|int.*', "bigint  ", col_type)
-                    col_type = re.sub(r'varchar.*|datetime.*|char.*|timestamp.*|longtext.*', "string ", col_type)
-                    str1 = ',' + col_nm.ljust(35) + col_type.ljust(20) + 'comment '
+                    col_type = re.sub(r'varchar.*|datetime.*|char.*|timestamp.*|longtext.*|date.*|text.*', "string ", col_type)
+                    str1 = ',' + col_nm.ljust(35) + col_type.ljust(20) + 'comment  \'\' '
                 else:
                     col_nm = splitStr[0]
                     str1 = col_nm.ljust(25)
@@ -70,7 +70,7 @@ for i in table_nm:
                     col_nm = splitStr[0]
                     col_type = splitStr[1]
                     col_type = re.sub(r'bigint.*|tinyint.*|int.*', "bigint  ", col_type)
-                    col_type = re.sub(r'varchar.*|datetime.*|char.*|timestamp.*|longtext.*', "string ", col_type)
+                    col_type = re.sub(r'varchar.*|datetime.*|char.*|timestamp.*|longtext.*|date.*|text.*', "string ", col_type)
                     col_comm = splitStr[-1]
                     col_comm = col_comm.replace(',', '')
                     col_comm = col_comm.replace('\'', '')
@@ -84,11 +84,11 @@ for i in table_nm:
                     col_nm = splitStr[0]
                     col_type = splitStr[1]
                     col_type = re.sub(r'bigint.*|tinyint.*|int.*', "bigint  ", col_type)
-                    col_type = re.sub(r'varchar.*|datetime.*|char.*|timestamp.*|longtext.*', "string ", col_type)
+                    col_type = re.sub(r'varchar.*|datetime.*|char.*|timestamp.*|longtext.*|date.*|text.*', "string ", col_type)
                     if col_type.startswith('decimal'):
                         str2 = ',COALESCE(T1.' + col_nm + ', CAST(0 AS ' + col_type + ')) -- ' + '\'' + col_comm + '\''
                     else:
-                        str2 = ',T1.' + col_nm.ljust(25)
+                        str2 = ',T1.' + col_nm.ljust(25).ljust(50)+ '--  \'\''
                 else:
                     col_nm = splitStr[0]
                     str2 = col_nm.ljust(25)
@@ -105,7 +105,7 @@ for i in table_nm:
                     col_nm = splitStr[0]
                     col_type = splitStr[1]
                     col_type = re.sub(r'bigint.*|tinyint.*|int.*', "bigint  ", col_type)
-                    col_type = re.sub(r'varchar.*|datetime.*|char.*|timestamp.*|longtext.*', "string ", col_type)
+                    col_type = re.sub(r'varchar.*|datetime.*|char.*|timestamp.*|longtext.*|date.*|text.*', "string ", col_type)
                     col_comm = splitStr[-1]
                     col_comm = col_comm.replace(',', '')
                     col_comm = col_comm.replace('\'', '')
@@ -114,7 +114,7 @@ for i in table_nm:
 
                 elif len(splitStr) == 4:
                     col_nm = splitStr[0]
-                    str3 = ',T1.' + col_nm.ljust(25)
+                    str3 = ',T1.' + col_nm.ljust(25) + ' -- ' + '\'\''
                 else:
                     col_nm = splitStr[0]
                     str3 = col_nm.ljust(25)
