@@ -33,8 +33,18 @@ with open('C:\\SCRT\\a.txt', 'r') as f:
             if len(splitStr) >= 0:
                 col_nm = splitStr[0]
                 col_nm = col_nm.replace(',', '')
-                str2 = ',COALESCE(' + col_nm + ','+'\''+'\')'
-                print str2
+                str1 = ',COALESCE(' + col_nm + ','+'\''+'\')' + '  AS ' + col_nm
+                print str1
+
+                
+
+
+
+
+
+
+
+
 
     print "\n"
 

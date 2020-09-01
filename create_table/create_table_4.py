@@ -62,6 +62,7 @@ for i in table_nm:
         print "\n"
         print "---------Coalesce转换-----------"
 
+
         for i in w:
             if len(i) > 1:
                 splitStr = []
@@ -74,33 +75,21 @@ for i in table_nm:
                     col_comm = splitStr[-1]
                     col_comm = col_comm.replace(',', '')
                     col_comm = col_comm.replace('\'', '')
+
                     col_type1=col_type+')'
                     print (",CAST(T1.%-40s  AS  %-50s    AS %-50s --  %-50s" % (col_nm,col_type1,col_nm,col_comm))
-                    col_comm1 = '--  ' +  '\''+ col_comm + '\''
-                    col_nm1=',COALESCE(T1.' + col_nm +', CAST(0 AS ' + col_type + ')) '
-                    col_nm2 = ',T1.' + col_nm
-                    if col_type.startswith('DECIMAL'):
-                        str2 = col_nm1.ljust(50) + col_comm1
-                    else:
-                        str2 =col_nm2.ljust(50) + col_comm1
+
+
                 elif len(splitStr) == 4:
                     col_nm = splitStr[0]
                     col_type = splitStr[1]
                     col_type = re.sub(r'BIGINT.*|TINYINT.*|INT.*', "BIGINT  ", col_type)
                     col_type = re.sub(r'VARCHAR.*|DATETIME.*|CHAR.*|TIMESTAMP.*|LONGTEXT.*|DATE.*|TEXT.*', "STRING ", col_type)
-                    col_comm1 = '--  ' + '\' \''
-                    col_nm1=',COALESCE(T1.' + col_nm +', CAST(0 AS ' + col_type + ')) '
-                    col_nm2 = ',T1.' + col_nm
-                    if col_type.startswith('DECIMAL'):
-                        str2 = col_nm1.ljust(50) + col_comm1
-                        # print (",COALESCE(T1.%-50s  , CAST(0 AS   %-50s   --  %-50s" % (col_nm, col_type1, col_comm))
-                    else:
-                        str2 =col_nm2.ljust(50) + col_comm1
-                        # print (",T1.%-50s  --  %-50s" % (col_nm, col_comm))
+                    col_type1=col_type+')'
+                    print (",CAST(T1.%-40s  AS  %-50s    AS %-50s --  %-50s" % (col_nm,col_type1,col_nm,col_comm))
                 else:
                     col_nm = splitStr[0]
                     str2 = col_nm.ljust(25)
-                print str2
 
         print "\n"
         print "---------码值转换----------"
@@ -118,15 +107,15 @@ for i in table_nm:
                     col_comm = col_comm.replace(',', '')
                     col_comm = col_comm.replace('\'', '')
 
-                    str3 = ',T1.' + col_nm.ljust(25) + ' -- '  + '\''+ col_comm + '\''
+                    print (",T1.%-50s  AS  %-50s -- %-50s" % (col_nm,col_nm,col_comm))
 
                 elif len(splitStr) == 4:
                     col_nm = splitStr[0]
-                    str3 = ',T1.' + col_nm.ljust(25) + ' -- ' + '\'\''
+                    print (",T1.%-50s  AS  %-50s -- %-50s" % (col_nm, col_nm, col_comm))
                 else:
                     col_nm = splitStr[0]
                     str3 = col_nm.ljust(25)
-                print str3
+
 
 
 
