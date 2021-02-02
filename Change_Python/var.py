@@ -5,6 +5,10 @@ import sys, os
 reload(sys);
 sys.setdefaultencoding("utf8")
 
+'''
+该部分主要是定义了在生成脚本时，复用的相关常用参数
+'''
+
 
 Template_1 = """#!/usr/local/python/bin/python
 # coding=utf-8

@@ -7,11 +7,11 @@ sys.setdefaultencoding("utf8")
 
 '''
 该脚本主要是针对征信表上线进行开发
-主要是用来对DWD层的脚本 加上删除旧分区的逻辑SQL语句，以降低表的占用空间
+主要是用来对DWD层的脚本 加上删除旧分区的逻辑SQL语句，修改dateby 语句 控制保存一天
 '''
 # 脚本的原始路径
-sourcePath = 'C:\\SVNwc\\source'
-targetPath = 'C:\\SVNwc\\target'
+sourcePath = '/home/edw/kongfanxin/source'
+targetPath = '/home/edw/kongfanxin/target'
 
 if os.path.exists(targetPath):
     print ("targetPath: " + targetPath + " is exists\n")
@@ -21,23 +21,25 @@ else:
 
 
 def modifyPythons(sourcePath, pyFile):
+    createPath = sourcePath.replace('source','target')
+
+    if os.path.exists(createPath):
+        print ("targetPath: " + targetPath + " is exists\n")
+    else:
+        os.makedirs(createPath)
+        print ("create targetPath:" + createPath + " sucess \n")
     with open(os.path.join(sourcePath, pyFile), "r+") as fileReader:
-        with open(os.path.join(targetPath, pyFile), "w+") as fileWriter:
-            # 切分 pyFile, 以获取表名
-            tableNameList = pyFile.split("_")[0:-1]
-            # 通过拼接获取表名
-            tableName = "_".join(tableNameList).upper()
-            print("dwd表名：" + tableName)
+        with open(os.path.join(createPath, pyFile), "w+") as fileWriter:
             for row in fileReader:
-                fileWriter.write(row)
                 # 添加 删除两日前数据的 语句 ，dwd层 只保留2天的数据
-                if (row.startswith("    #--------------------------------------SQL语句块【开始】")):
+                if (row.startswith("    dateByCount = util.DateUtils.getDateByCount(bizDate8,-2)")):
                     print row
-                    fileWriter.write("    #  删除历史分区数据 \n")
-                    fileWriter.write(
-                        "    sql = \"ALTER TABLE DWD." + tableName + " DROP PARTITION ( DT < \" + dateByCount + \")\"  \n")
-                    fileWriter.write("    print (sql + \'\\n\') " + " \n")
-                    fileWriter.write("    util.execSql(sql,locals()) ")
+                    row = row.replace("    dateByCount = util.DateUtils.getDateByCount(bizDate8,-2)", "    dateByCount = util.DateUtils.getDateByCount(bizDate8,-0)")
+                    print row
+                    fileWriter.write(row)
+                else:
+                    fileWriter.write(row)
+
         fileWriter.close()
     fileReader.close()
 

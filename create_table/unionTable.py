@@ -9,12 +9,12 @@ from collections import defaultdict
 import MySQLdb
 import pandas as pd
 
-engine = MySQLdb.connect(host='60.60.40.62', port=3306, user='liuyang', passwd='liuyang@2019', db='loan_channel',
+engine = MySQLdb.connect(host='10.18.1.20', port=3306, user='liuyang', passwd='liuyang@2019', db='cmis_hs',
                          connect_timeout=200, charset='utf8')
 
 col_nm = defaultdict(list)
 # 'cust_acct_prod_info','cust_info',
-table_nm = ['lm_setlmt_log']
+table_nm = ['lm_grd_trans_log']
 for i in table_nm:
     sql = "show create table " + i
     df = pd.read_sql(sql, engine)
@@ -34,63 +34,58 @@ for i in table_nm:
 
         print "\n"
 
-        print "---------Coalesce转换-----------"
-
+        print "---------建表语句-----------"
         for i in w:
             if len(i) > 1:
                 splitStr = []
                 splitStr = i.split()
-                if len(splitStr) >= 5:
-                    col_nm = splitStr[0]
-                    col_type = splitStr[1]
-                    col_type = re.sub(r'BIGINT.*|TINYINT.*|INT.*', "BIGINT  ", col_type)
-                    col_type = re.sub(r'VARCHAR.*|DATETIME.*|CHAR.*|TIMESTAMP.*|LONGTEXT.*|DATE.*|TEXT.*', "STRING ", col_type)
-                    col_comm = splitStr[-1]
-                    col_comm = col_comm.replace(',', '')
-                    col_comm = col_comm.replace('\'', '')
+                col_nm = splitStr[0]
+                col_type = splitStr[1]
+                col_type = re.sub(r'BIGINT.*|TINYINT.*|INT.*', "BIGINT  ", col_type)
+                col_type = re.sub(r'VARCHAR.*|DATETIME.*|CHAR.*|TIMESTAMP.*|LONGTEXT.*|DATE.*|TEXT.*', "STRING ",
+                                  col_type)
+                col_comm = re.findall("'([^']*)'", i)
+                col_comm = ''.join(col_comm)
+                str1 = ',' + col_nm.ljust(35) + col_type.ljust(20) + 'COMMENT  ' + '\'' + col_comm + '\''
 
-                    col_type1=col_type+')'
-                    print (",CAST(T1.%-40s  AS  %-50s    AS %-50s --  %-50s" % (col_nm,col_type1,col_nm,col_comm))
-
-
-                elif len(splitStr) == 4:
-                    col_nm = splitStr[0]
-                    col_type = splitStr[1]
-                    col_type = re.sub(r'BIGINT.*|TINYINT.*|INT.*', "BIGINT  ", col_type)
-                    col_type = re.sub(r'VARCHAR.*|DATETIME.*|CHAR.*|TIMESTAMP.*|LONGTEXT.*|DATE.*|TEXT.*', "STRING ", col_type)
-                    col_type1=col_type+')'
-                    print (",CAST(T1.%-40s  AS  %-50s    AS %-50s --  %-50s" % (col_nm,col_type1,col_nm,col_comm))
-                else:
-                    col_nm = splitStr[0]
-                    str2 = col_nm.ljust(25)
+                print str1
 
         print "\n"
+
         print "---------码值转换----------"
 
         for i in w:
             if len(i) > 1:
                 splitStr = []
                 splitStr = i.split()
-                if len(splitStr) >= 5:
-                    col_nm = splitStr[0]
-                    col_type = splitStr[1]
-                    col_type = re.sub(r'BIGINT.*|TINYINT.*|INT.*', "BIGINT  ", col_type)
-                    col_type = re.sub(r'VARCHAR.*|DATETIME.*|CHAR.*|TIMESTAMP.*|LONGTEXT.*|DATE.*|TEXT.*', "STRING ", col_type)
-                    col_comm = splitStr[-1]
-                    col_comm = col_comm.replace(',', '')
-                    col_comm = col_comm.replace('\'', '')
+                col_nm = splitStr[0]
+                col_type = splitStr[1]
+                col_type = re.sub(r'BIGINT.*|TINYINT.*|INT.*', "BIGINT  ", col_type)
+                col_type = re.sub(r'VARCHAR.*|DATETIME.*|CHAR.*|TIMESTAMP.*|LONGTEXT.*|DATE.*|TEXT.*', "STRING ",
+                                  col_type)
+                col_comm = re.findall("'([^']*)'", i)
+                col_comm = ''.join(col_comm)
 
-                    print (",T1.%-50s  AS  %-50s -- %-50s" % (col_nm,col_nm,col_comm))
+                print (",T1.%-20s  AS  %-20s -- %-20s" % (col_nm, col_nm, col_comm))
 
+        print "---------Coalesce转换-----------"
 
-                elif len(splitStr) == 4:
-                    col_nm = splitStr[0]
-                    print (",T1.%-50s  AS  %-50s -- %-50s" % (col_nm, col_nm, col_comm))
-                else:
-                    col_nm = splitStr[0]
-                    print (",T1.%-50s  AS  %-50s -- %-50s" % (col_nm, col_nm, col_comm))
-                # print str3
+        for i in w:
+            if len(i) > 1:
+                splitStr = []
+                splitStr = i.split()
+                col_nm = splitStr[0]
+                col_type = splitStr[1]
+                col_type = re.sub(r'BIGINT.*|TINYINT.*|INT.*', "BIGINT  ", col_type)
+                col_type = re.sub(r'VARCHAR.*|DATETIME.*|CHAR.*|TIMESTAMP.*|LONGTEXT.*|DATE.*|TEXT.*', "STRING ",
+                                  col_type)
+                col_comm = re.findall("'([^']*)'", i)
+                col_comm = ''.join(col_comm)
 
+                col_type1 = col_type + ')'
+                print (",CAST(T1.%-20s  AS  %-20s    AS %-20s --  %-20s" % (col_nm, col_type1, col_nm, col_comm))
+
+        print "\n"
 
 
 

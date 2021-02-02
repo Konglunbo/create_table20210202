@@ -9,9 +9,9 @@ sys.setdefaultencoding("utf8")
 获取列表中所有作业的文件，并将文件输出到指定路径
 
 '''
-sourcePath = 'C:\\SVNwc\\source\\tableList.txt'
-CreateTablePath = 'C:\\SVNwc\\target\\createTable'
-CreateDWDPath = 'C:\\SVNwc\\target\\dwdTable'
+sourcePath = '/home/edw/CreateTable/source/tableList.txt'
+CreateTablePath = '/home/edw/CreateTable/target/createTable'
+CreateDWDPath = '/home/edw/CreateTable/target/dwdTable'
 tableList = {}
 # 读取所有映射
 with io.open(sourcePath, 'r+', encoding='utf-8') as tlist:

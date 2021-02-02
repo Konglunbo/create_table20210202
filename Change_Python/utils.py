@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import sys,var,os
+import sys, var, os
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -9,15 +9,18 @@ from collections import defaultdict
 import MySQLdb
 import pandas as pd
 
+"""
+该utils类定义了三个方法：
+1. getTableSchema 主要是通过连接MYSQL数据库，通过mysql的建表语句，通过拼接的方式，获取到 脚本中的 不同的表结构形式
+2. createTablePython 主要用于生成 stg, ods , dwd层的三层的建表语句
+3. createTablePython 主要用于生成 dwd 层的python 原始脚本
+"""
 
-def getTableSchema(tableName,dbName):
+
+def getTableSchema(tableName, dbName):
     engine = MySQLdb.connect(host='10.18.1.20', port=3306, user='liuyang', passwd='liuyang@2019', db=dbName,
                              connect_timeout=200, charset='utf8')
 
-    col_nm = defaultdict(list)
-
-    # 'cust_acct_prod_info','cust_info',
-    # lm_loan_install_detl
     createTable_sql = ''
     coalesce_sql = ''
     final_sql = ''
@@ -26,7 +29,6 @@ def getTableSchema(tableName,dbName):
         sql = "show create table " + i
         df = pd.read_sql(sql, engine)
         content = df['Create Table'].values[0]
-        # print content
         with open('C:\\Users\\kongfanxin.CITICCFC\\Desktop\\a.txt', 'w') as f:
             f.write(content)
         with open('C:\\Users\\kongfanxin.CITICCFC\\Desktop\\a.txt', 'r') as f:
@@ -41,28 +43,15 @@ def getTableSchema(tableName,dbName):
 
             for i in w:
                 if len(i) > 1:
-                    splitStr = []
                     splitStr = i.split()
-                    if len(splitStr) >= 5:
-                        col_nm = splitStr[0]
-                        col_type = splitStr[1]
-                        col_type = re.sub(r'BIGINT.*|TINYINT.*|INT.*', "BIGINT  ", col_type)
-                        col_type = re.sub(r'VARCHAR.*|DATETIME.*|CHAR.*|TIMESTAMP.*|LONGTEXT.*|DATE.*|TEXT.*',
-                                          "STRING ", col_type)
-                        col_comm = splitStr[-1]
-                        col_comm = col_comm.replace(',', '')
-                        col_comm = col_comm.replace('\'', '')
-                        str1 = ',' + col_nm.ljust(35) + col_type.ljust(20) + 'COMMENT  ' + '\'' + col_comm + '\''
-                    elif len(splitStr) == 4:
-                        col_nm = splitStr[0]
-                        col_type = splitStr[1]
-                        col_type = re.sub(r'BIGINT.*|TINYINT.*|INT.*', "BIGINT  ", col_type)
-                        col_type = re.sub(r'VARCHAR.*|DATETIME.*|CHAR.*|TIMESTAMP.*|LONGTEXT.*|DATE.*|TEXT.*',
-                                          "STRING ", col_type)
-                        str1 = ',' + col_nm.ljust(35) + col_type.ljust(20) + 'COMMENT  \'\' '
-                    else:
-                        col_nm = splitStr[0]
-                        str1 = col_nm.ljust(25)
+                    col_nm = splitStr[0]
+                    col_type = splitStr[1]
+                    col_type = re.sub(r'BIGINT.*|TINYINT.*|INT.*', "BIGINT  ", col_type)
+                    col_type = re.sub(r'VARCHAR.*|DATETIME.*|CHAR.*|TIMESTAMP.*|LONGTEXT.*|DATE.*|TEXT.*',
+                                      "STRING ", col_type)
+                    col_comm = re.findall("'([^']*)'", i)
+                    col_comm = ''.join(col_comm)
+                    str1 = ",%-20s  %-20s COMMENT  '%-1s'" % (col_nm, col_type, col_comm)
 
                     createTable_sql = createTable_sql + str1 + '\n'
 
@@ -70,31 +59,16 @@ def getTableSchema(tableName,dbName):
                 if len(i) > 1:
                     splitStr = []
                     splitStr = i.split()
-                    if len(splitStr) >= 5:
-                        col_nm = splitStr[0]
-                        col_type = splitStr[1]
-                        col_type = re.sub(r'BIGINT.*|TINYINT.*|INT.*', "BIGINT  ", col_type)
-                        col_type = re.sub(r'VARCHAR.*|DATETIME.*|CHAR.*|TIMESTAMP.*|LONGTEXT.*|DATE.*|TEXT.*',
-                                          "STRING ", col_type)
-                        col_comm = splitStr[-1]
-                        col_comm = col_comm.replace(',', '')
-                        col_comm = col_comm.replace('\'', '')
-                        col_type1 = col_type + ')'
-                        str2 = ",CAST(T1.%-40s  AS  %-50s    AS %-50s --  %-50s" % (
-                        col_nm, col_type1, col_nm, col_comm)
+                    col_nm = splitStr[0]
+                    col_type = splitStr[1]
+                    col_type = re.sub(r'BIGINT.*|TINYINT.*|INT.*', "BIGINT  ", col_type)
+                    col_type = re.sub(r'VARCHAR.*|DATETIME.*|CHAR.*|TIMESTAMP.*|LONGTEXT.*|DATE.*|TEXT.*',
+                                      "STRING ", col_type)
+                    col_comm = re.findall("'([^']*)'", i)
+                    col_comm = ''.join(col_comm)
+                    col_type1 = col_type + ')'
+                    str2 = ",CAST(T1.%-20s  AS  %-30s    AS %-30s --  %-20s" % (col_nm, col_type1, col_nm, col_comm)
 
-                    elif len(splitStr) == 4:
-                        col_nm = splitStr[0]
-                        col_type = splitStr[1]
-                        col_type = re.sub(r'BIGINT.*|TINYINT.*|INT.*', "BIGINT  ", col_type)
-                        col_type = re.sub(r'VARCHAR.*|DATETIME.*|CHAR.*|TIMESTAMP.*|LONGTEXT.*|DATE.*|TEXT.*',
-                                          "STRING ", col_type)
-                        col_type1 = col_type + ')'
-                        str2 = ",CAST(T1.%-40s  AS  %-50s    AS %-50s --  %-50s" % (
-                        col_nm, col_type1, col_nm, col_comm)
-                    else:
-                        col_nm = splitStr[0]
-                        str2 = col_nm.ljust(25)
 
                     coalesce_sql = coalesce_sql + str2 + '\n'
 
@@ -102,35 +76,24 @@ def getTableSchema(tableName,dbName):
                 if len(i) > 1:
                     splitStr = []
                     splitStr = i.split()
-                    if len(splitStr) >= 5:
-                        col_nm = splitStr[0]
-                        col_type = splitStr[1]
-                        col_type = re.sub(r'BIGINT.*|TINYINT.*|INT.*', "BIGINT  ", col_type)
-                        col_type = re.sub(r'VARCHAR.*|DATETIME.*|CHAR.*|TIMESTAMP.*|LONGTEXT.*|DATE.*|TEXT.*',
-                                          "STRING ", col_type)
-                        col_comm = splitStr[-1]
-                        col_comm = col_comm.replace(',', '')
-                        col_comm = col_comm.replace('\'', '')
+                    col_nm = splitStr[0]
+                    col_type = splitStr[1]
+                    col_type = re.sub(r'BIGINT.*|TINYINT.*|INT.*', "BIGINT  ", col_type)
+                    col_type = re.sub(r'VARCHAR.*|DATETIME.*|CHAR.*|TIMESTAMP.*|LONGTEXT.*|DATE.*|TEXT.*',"STRING ", col_type)
+                    col_comm = re.findall("'([^']*)'", i)
+                    col_comm = ''.join(col_comm)
 
-                        str3 = (",T1.%-50s  AS  %-50s -- %-50s" % (col_nm, col_nm, col_comm))
-
-                    elif len(splitStr) == 4:
-                        col_nm = splitStr[0]
-                        str3 = (",T1.%-50s  AS  %-50s -- %-50s" % (col_nm, col_nm, col_comm))
-                    else:
-                        col_nm = splitStr[0]
-                        str3 = col_nm.ljust(25)
+                    str3 = (",T1.%-30s  AS  %-30s -- %-20s" % (col_nm, col_nm, col_comm))
 
                     final_sql = final_sql + str3 + '\n'
-
+    # 对获取到的 建表语句，将 第一个 ， 剔除掉
     createTable_sql = ' ' + createTable_sql[1::1]
-
     coalesce_sql = ' ' + coalesce_sql[1::1]
     final_sql = ' ' + final_sql[1::1]
-
     return createTable_sql, coalesce_sql, final_sql
 
-def createTablePython(targetPath,pyFile,stgTable,tableName1,odsTable,dwdTable,createTable_sql):
+
+def createTablePython(targetPath, pyFile, stgTable, tableName1, odsTable, dwdTable, createTable_sql):
     if os.path.exists(targetPath):
         print ("targetPath: " + targetPath + " is exists\n")
     else:
@@ -139,39 +102,43 @@ def createTablePython(targetPath,pyFile,stgTable,tableName1,odsTable,dwdTable,cr
 
     with open(os.path.join(targetPath, pyFile), "w+") as fileWriter:
         fileWriter.write(var.Template_1)
-        fileWriter.write("    #--------------------------------------STG 建表------------------------------------------ \n\n")
+        fileWriter.write(
+            "    #--------------------------------------STG 建表------------------------------------------ \n\n")
         fileWriter.write("    #删除表 \n")
-        fileWriter.write("    util.dropTable(DB_SOURCE_STG +  '." +stgTable+"'); \n\n")
+        fileWriter.write("    util.dropTable(DB_SOURCE_STG +  '." + stgTable + "'); \n\n")
         fileWriter.write("    sql = r\'\'\' \n")
-        fileWriter.write("    CREATE TABLE IF NOT EXISTS $DB_SOURCE_STG$." +stgTable +"(\n\n")
+        fileWriter.write("    CREATE TABLE IF NOT EXISTS $DB_SOURCE_STG$." + stgTable + "(\n\n")
         fileWriter.write(createTable_sql)
-        fileWriter.write("\n        ) COMMENT '" +tableName1+"' \n")
-        fileWriter.write(var.Template_STG )
-        fileWriter.write("        util.exit(ExitCode.EXIT_ERROR,'create table " +stgTable +" 异常出错') ; \n\n")
-        fileWriter.write("    #--------------------------------------ODS 建表------------------------------------------ \n\n")
+        fileWriter.write("\n        ) COMMENT '" + tableName1 + "' \n")
+        fileWriter.write(var.Template_STG)
+        fileWriter.write("        util.exit(ExitCode.EXIT_ERROR,'create table " + stgTable + " 异常出错') ; \n\n")
+        fileWriter.write(
+            "    #--------------------------------------ODS 建表------------------------------------------ \n\n")
         fileWriter.write("    #删除表 \n")
-        fileWriter.write("    util.dropTable(DB_SOURCE_ODS +  '." +odsTable+"'); \n\n")
+        fileWriter.write("    util.dropTable(DB_SOURCE_ODS +  '." + odsTable + "'); \n\n")
         fileWriter.write("    sql = r\'\'\' \n")
-        fileWriter.write("    CREATE TABLE IF NOT EXISTS $DB_SOURCE_ODS$." +odsTable +"(\n\n")
+        fileWriter.write("    CREATE TABLE IF NOT EXISTS $DB_SOURCE_ODS$." + odsTable + "(\n\n")
         fileWriter.write(createTable_sql)
-        fileWriter.write("\n        ) COMMENT '" +tableName1+"' \n")
-        fileWriter.write(var.Template_ODS )
-        fileWriter.write("        util.exit(ExitCode.EXIT_ERROR,'create table " +odsTable +" 异常出错') ; \n\n")
-        fileWriter.write("    #--------------------------------------DWD 建表------------------------------------------ \n\n")
+        fileWriter.write("\n        ) COMMENT '" + tableName1 + "' \n")
+        fileWriter.write(var.Template_ODS)
+        fileWriter.write("        util.exit(ExitCode.EXIT_ERROR,'create table " + odsTable + " 异常出错') ; \n\n")
+        fileWriter.write(
+            "    #--------------------------------------DWD 建表------------------------------------------ \n\n")
         fileWriter.write("    #删除表 \n")
-        fileWriter.write("    util.dropTable(DB_SOURCE_DWD +  '." +dwdTable+"'); \n\n")
+        fileWriter.write("    util.dropTable(DB_SOURCE_DWD +  '." + dwdTable + "'); \n\n")
         fileWriter.write("    sql = r\'\'\' \n")
-        fileWriter.write("    CREATE TABLE IF NOT EXISTS $DB_SOURCE_DWD$." +dwdTable +"(\n\n")
+        fileWriter.write("    CREATE TABLE IF NOT EXISTS $DB_SOURCE_DWD$." + dwdTable + "(\n\n")
         fileWriter.write(createTable_sql)
         fileWriter.write(var.Template_DWD_0)
-        fileWriter.write("\n        ) COMMENT '" +tableName1+"' \n")
-        fileWriter.write(var.Template_DWD )
-        fileWriter.write("        util.exit(ExitCode.EXIT_ERROR,'create table " +dwdTable +" 异常出错') ; \n\n")
+        fileWriter.write("\n        ) COMMENT '" + tableName1 + "' \n")
+        fileWriter.write(var.Template_DWD)
+        fileWriter.write("        util.exit(ExitCode.EXIT_ERROR,'create table " + dwdTable + " 异常出错') ; \n\n")
         fileWriter.write(var.Template_3)
         fileWriter.write(var.Template_4)
         fileWriter.close()
 
-def createDWDPython(targetPath,pyFile,odsTable,dwdTable,createTable_sql,coalesce_sql,stgTable3,final_sql):
+
+def createDWDPython(targetPath, pyFile, odsTable, dwdTable, createTable_sql, coalesce_sql, stgTable3, final_sql):
     if os.path.exists(targetPath):
         print ("targetPath: " + targetPath + " is exists\n")
     else:
@@ -225,4 +192,3 @@ def createDWDPython(targetPath,pyFile,odsTable,dwdTable,createTable_sql,coalesce
         fileWriter.write(var.Template_3 + "\n\n")
         fileWriter.write(var.Template_4)
         fileWriter.close()
-
